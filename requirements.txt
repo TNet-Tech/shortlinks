@@ -1,0 +1,3 @@
+# Add your module's specific Python dependencies here, one per line.
+# Example: requests
+# Example: pandas==1.5.0

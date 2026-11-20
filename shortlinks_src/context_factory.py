@@ -1,0 +1,83 @@
+"""
+Context factory for providing BackboneContext in different environments.
+"""
+import os
+from typing import Optional
+from chacc_api import BackboneContext
+
+# Database sessions come from chacc_api.database. Re-exported here so
+# `from .context_factory import get_async_db` keeps working.
+from chacc_api.database import get_async_db, get_db  # noqa: F401
+
+
+# Module-level context holder (set by main.py after setup_plugin is called)
+_module_context: Optional[BackboneContext] = None
+
+
+def set_module_context(context: BackboneContext):
+    """Set the module context (called by main.py)."""
+    global _module_context
+    _module_context = context
+
+
+def get_module_context() -> Optional[BackboneContext]:
+    """Get the module context (used by other modules to avoid circular imports)."""
+    return _module_context
+
+
+class ContextFactory:
+    """Factory for creating appropriate BackboneContext based on environment."""
+
+    @staticmethod
+    def get_context(context: Optional[BackboneContext] = None) -> BackboneContext:
+        """
+        Get the appropriate context for the current environment.
+
+        Args:
+            context: Provided context (when running in backbone)
+
+        Returns:
+            BackboneContext instance
+        """
+        if context is not None:
+            return context
+
+        raise RuntimeError(
+            "No context provided. This module requires the ChaCC backbone to run. "
+            "dev_context has been removed - modules must run within the backbone."
+        )
+
+    @staticmethod
+    def is_backbone_available() -> bool:
+        """Check if we're running within the ChaCC backbone."""
+        return os.getenv("CHACC_BACKBONE") == "true"
+
+    @staticmethod
+    def require_backbone():
+        """Raise error if not running in backbone (for production modules)."""
+        if not ContextFactory.is_backbone_available():
+            raise RuntimeError(
+                "This module requires the ChaCC backbone to run. "
+                "dev_context has been removed - modules must run within the backbone."
+            )
+
+
+def get_context(context: Optional[BackboneContext] = None) -> BackboneContext:
+    """Get context using the factory."""
+    return ContextFactory.get_context(context)
+
+
+async def get_redis_client():
+    """Get Redis client from module context."""
+    context = get_module_context()
+    if context is None:
+        return None
+
+    redis_service = context.get_service("redis")
+    if redis_service is None:
+        return None
+
+    try:
+        return await redis_service.get_client()
+    except Exception:
+        return None

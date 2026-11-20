@@ -1,0 +1,21 @@
+{
+  "name": "shortlinks",
+  "display_name": "ChaCC URL Shortener",
+  "version": "0.1.0",
+  "author": "Jonas",
+  "description": "Turn long URLs into short codes that redirect. Exposes visit events other modules can listen to.",
+  "entry_point": "shortlinks_src.main:setup_plugin",
+  "test_entry_point": "shortlinks_src.tests.test_module:run_module_tests",
+  "base_path_prefix": "/shortlinks",
+  "dependencies_file": "requirements.txt",
+  "module_dependencies": {
+    "required": [],
+    "optional": []
+  },
+  "required_chacc_version": ">=1.0.0",
+  "license": "MIT",
+  "tags": [
+    "shortlinks"
+  ],
+  "homepage": "https://github.com/TNet-Tech/shortlinks"
+}
